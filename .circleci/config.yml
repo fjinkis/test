@@ -20,24 +20,22 @@ jobs:
       # AWS binary
       - restore_cache:
           name: Getting AWS binary
-          key: v1-aws-
+          key: v2-aws-
       - run:
           name: Bringing AWS binary
           command: |
-            if [[ ! -f .local/bin/aws  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
+            if [[ ! -f awscliv2.zip  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
               echo 'Downloading AWS binary'
               curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip
+            else
               unzip awscliv2.zip
               ./aws/install -u -i aws-cli -b .local/bin
-            else
-                echo 'AWS binary already in environment'
             fi
       - save_cache:
           name: "Saving AWS binary"
           paths:
-            - aws-cli
-            - .local/bin/aws
-          key: v1-aws-{{ checksum ".local/bin/aws" }}
+            - awscliv2.zip
+          key: v2-aws-{{ checksum "awscliv2.zip" }}
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
