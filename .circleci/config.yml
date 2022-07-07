@@ -19,7 +19,7 @@ jobs:
       # AWS binary
       - restore_cache:
           name: Getting AWS binary
-          key: v3-aws-
+          key: v4-aws-
       - run:
           name: Bringing AWS binary
           command: |
@@ -34,9 +34,10 @@ jobs:
       - save_cache:
           name: "Saving AWS binary"
           paths:
+            - ~/aws
             - ~/aws-cli
             - ~/.local/bin/aws
-          key: v3-aws-{{ checksum "~/.local/bin/aws" }}
+          key: v4-aws-{{ checksum "~/.local/bin/aws" }}
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
@@ -61,6 +62,7 @@ jobs:
           root: .
           paths:
             - kelsus-cdk
+            - aws
             - aws-cli
             - .local/bin/aws
   bump:
