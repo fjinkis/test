@@ -55,7 +55,7 @@ jobs:
           paths:
             - ~/kelsus-cdk.sh
           key: v2-kelsus-cdk-v1.0.1
-      - run: chmod +x kelsus-cdk
+      - run: chmod +x kelsus-cdk.sh
       # Save binaries
       - persist_to_workspace:
           root: .
