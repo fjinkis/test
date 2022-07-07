@@ -11,7 +11,7 @@ jobs:
 
   bump:
     docker:
-      - image: cimg/aws:2022.6.1
+      - image: cimg/aws:2022.06.1
     resource_class: small
     environment:
       KELSUS_CDK_VERSION: "1.0.1"
@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     docker:
-      - image: cimg/aws:2022.6.1
+      - image: cimg/aws:2022.06.1
     resource_class: small
     steps:
       - checkout
@@ -69,7 +69,7 @@ jobs:
 
   check:
     docker:
-      - image: cimg/aws:2022.6.1
+      - image: cimg/aws:2022.06.1
     resource_class: small
     steps:
       - checkout
@@ -89,7 +89,7 @@ jobs:
 
   verify:
     docker:
-      - image: cimg/aws:2022.6.1
+      - image: cimg/aws:2022.06.1
     resource_class: small
     environment:
       KELSUS_CDK_VERSION: "1.0.1"
