@@ -1,0 +1,202 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:16.13.2
+    resource_class: small
+    steps:
+      # DEFINE HERE YOUR TESTS AND ARTIFACTS
+      - run: echo "BUILD & TEST"
+
+  bump:
+    docker:
+      - image: cimg/aws:2022.6.1
+    resource_class: small
+    environment:
+      KELSUS_CDK_VERSION: "1.0.1"
+    steps:
+      - checkout
+      - restore_cache:
+          name: Getting Kelsus CDK binary
+          key: kelsus-cdk-
+      - run:
+          name: Bringing Kelsus CDK binary
+          command: |
+            if [[ ! -f ~/kelsus-cdk.sh ]]; then
+              echo 'Downloading Kelsus CDK binary'
+              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk.sh kelsus-cdk.sh
+            else
+                echo 'Kelsus CDK binary already in environment'
+            fi
+      - save_cache:
+          name: "Saving Kelsus CDK binary"
+          paths:
+            - ~/kelsus-cdk.sh
+          key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
+      - run: kelsus-cdk.sh bump
+      - persist_to_workspace:
+          root: .
+          paths:
+            - kelsus-cdk.sh
+            - package.json
+
+  deploy:
+    docker:
+      - image: cimg/aws:2022.6.1
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: kelsus-cdk.sh deploy service default
+      - persist_to_workspace:
+          root: .
+          paths:
+            - DEPLOY_STATUS
+
+  tag:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    environment:
+      SKIP_MAIN_CONTROL: 0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: kelsus-cdk.sh tag
+
+  check:
+    docker:
+      - image: cimg/aws:2022.6.1
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo "CDK DIFF"
+
+  prepare-main:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: kelsus-cdk.sh prepare
+
+  verify:
+    docker:
+      - image: cimg/aws:2022.6.1
+    resource_class: small
+    environment:
+      KELSUS_CDK_VERSION: "1.0.1"
+    steps:
+      - checkout
+      - restore_cache:
+          name: Getting Kelsus CDK binary
+          key: kelsus-cdk-
+      - run:
+          name: Bringing Kelsus CDK binary
+          command: |
+            if [[ ! -f ~/kelsus-cdk.sh ]]; then
+              echo 'Downloading Kelsus CDK binary'
+              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk.sh kelsus-cdk.sh
+            else
+                echo 'Kelsus CDK binary already in environment'
+            fi
+      - save_cache:
+          name: "Saving Kelsus CDK binary"
+          paths:
+            - ~/kelsus-cdk.sh
+          key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
+      - run: kelsus-cdk.sh verify
+      - persist_to_workspace:
+          root: .
+          paths:
+            - kelsus-cdk.sh
+
+  pointers:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: kelsus-cdk.sh pointers ${cat DEPLOY_STATUS}
+
+workflows:
+  production:
+    jobs:
+      - verify:
+          filters:
+            tags:
+              only:
+                - /[D|d]eploy/
+                - /[R|r]ollback-?.*/
+            branches:
+              ignore: /.*/
+      - deploy:
+          requires:
+            - verify
+          filters:
+            tags:
+              only:
+                - /[D|d]eploy/
+                - /[R|r]ollback-?.*/
+      - pointers:
+          requires:
+            - deploy
+          filters:
+            tags:
+              only:
+                - /[D|d]eploy/
+                - /[R|r]ollback-?.*/
+
+  development:
+    jobs:
+      - build
+      - bump:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - /[D|d]evelop-?.*/
+                - /[D|d]evelopment/
+                - /[S|s]taging/
+                - /[H|h]otfix(es)?/
+      - deploy:
+          requires:
+            - bump
+      - tag:
+          requires:
+            - build
+            - deploy
+          filters:
+            branches:
+              only:
+                - /[D|d]evelop-?.*/
+                - /[D|d]evelopment/
+                - /[S|s]taging/
+                - /[H|h]otfix(es)?/
+                - /[M|m]ain/
+                - /[M|m]aster/
+      - check:
+          requires:
+            - tag
+          filters:
+            branches:
+              only:
+                - /[M|m]ain/
+                - /[M|m]aster/
+      - approve:
+          type: approval
+          requires:
+            - check
+      - prepare-main:
+          requires:
+            - approve
