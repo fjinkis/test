@@ -16,7 +16,6 @@ jobs:
       FORCE_UPDATE_AWS_BINARY: 0
       KELSUS_CDK_VERSION: "1.0.1"
     steps:
-      - checkout
       # AWS binary
       - restore_cache:
           name: Getting AWS binary
