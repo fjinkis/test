@@ -34,9 +34,8 @@ jobs:
           paths:
             - ~/kelsus-cdk.sh
           key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
-      - run: |
-          chmod +x kelsus-cdk
-          ./kelsus-cdk.sh bump
+      - run: chmod +x kelsus-cdk.sh
+      - run: ./kelsus-cdk.sh bump
       - persist_to_workspace:
           root: .
           paths:
