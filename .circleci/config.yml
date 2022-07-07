@@ -34,7 +34,7 @@ jobs:
           paths:
             - ~/kelsus-cdk.sh
           key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
-      - run: kelsus-cdk.sh bump
+      - run: ./kelsus-cdk.sh bump
       - persist_to_workspace:
           root: .
           paths:
@@ -49,7 +49,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: kelsus-cdk.sh deploy service default
+      - run: ./kelsus-cdk.sh deploy service default
       - persist_to_workspace:
           root: .
           paths:
@@ -65,7 +65,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: kelsus-cdk.sh tag
+      - run: ./kelsus-cdk.sh tag
 
   check:
     docker:
@@ -85,7 +85,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: kelsus-cdk.sh prepare
+      - run: ./kelsus-cdk.sh prepare
 
   verify:
     docker:
@@ -112,7 +112,7 @@ jobs:
           paths:
             - ~/kelsus-cdk.sh
           key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
-      - run: kelsus-cdk.sh verify
+      - run: ./kelsus-cdk.sh verify
       - persist_to_workspace:
           root: .
           paths:
@@ -126,7 +126,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: kelsus-cdk.sh pointers ${cat DEPLOY_STATUS}
+      - run: ./kelsus-cdk.sh pointers ${cat DEPLOY_STATUS}
 
 workflows:
   production:
