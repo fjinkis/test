@@ -40,27 +40,28 @@ jobs:
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: v2-kelsus-cdk-v1.0.1
+          key: v4-kelsus-cdk-v1.0.1
       - run:
           name: Bringing Kelsus CDK binary
           command: |
             if [[ ! -f ~/kelsus-cdk ]]; then
               echo 'Downloading Kelsus CDK binary'
-              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk kelsus-cdk.sh
+              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk kelsus-cdk
             else
                 echo 'Kelsus CDK binary already in environment'
             fi
       - save_cache:
           name: "Saving Kelsus CDK binary"
           paths:
-            - ~/kelsus-cdk.sh
-          key: v2-kelsus-cdk-v1.0.1
-      - run: chmod +x kelsus-cdk.sh
+            - ~/kelsus-cdk
+          key: v4-kelsus-cdk-v1.0.1
+      - run: chmod +x kelsus-cdk
       # Save binaries
       - persist_to_workspace:
           root: .
           paths:
-            - kelsus-cdk.sh
+            - /tmp/caxa
+            - kelsus-cdk
             - aws-cli
             - .local/bin/aws
   bump:
@@ -71,7 +72,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh bump
+      - run: ./kelsus-cdk bump
       - persist_to_workspace:
           root: .
           paths:
@@ -84,7 +85,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh deploy --action deploy
+      - run: ./kelsus-cdk deploy --action deploy
       - persist_to_workspace:
           root: .
           paths:
@@ -99,7 +100,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh tag
+      - run: ./kelsus-cdk tag
   check:
     docker:
       - image: cimg/python:3.10.5
@@ -117,7 +118,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh prepare
+      - run: ./kelsus-cdk prepare
   verify:
     docker:
       - image: cimg/python:3.10.5
@@ -128,7 +129,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh verify
+      - run: ./kelsus-cdk verify
   pointers:
     docker:
       - image: cimg/python:3.10.5
@@ -137,7 +138,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh pointers ${cat DEPLOY_STATUS}
+      - run: ./kelsus-cdk pointers ${cat DEPLOY_STATUS}
 
 workflows:
   production:
