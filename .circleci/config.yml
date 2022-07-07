@@ -22,15 +22,14 @@ jobs:
           name: Getting AWS binary
           key: v2-aws-
       - run:
-          name: Bringing AWS binary
+          name: Bringing/Installing AWS binary
           command: |
             if [[ ! -f awscliv2.zip  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
               echo 'Downloading AWS binary'
-              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip
-            else
-              unzip awscliv2.zip
-              ./aws/install -u -i aws-cli -b .local/bin
+              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip 
             fi
+            unzip awscliv2.zip
+            ./aws/install -u -i aws-cli -b .local/bin
       - save_cache:
           name: "Saving AWS binary"
           paths:
