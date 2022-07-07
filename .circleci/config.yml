@@ -50,7 +50,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh deploy service default
+      - run: ./kelsus-cdk.sh deploy deploy default
       - persist_to_workspace:
           root: .
           paths:
