@@ -8,49 +8,80 @@ jobs:
     steps:
       # DEFINE HERE YOUR TESTS AND ARTIFACTS
       - run: echo "BUILD & TEST"
-
-  bump:
+  setup:
     docker:
-      - image: cimg/aws:2022.06.1
+      - image: cimg/base:stable
     resource_class: small
     environment:
+      FORCE_UPDATE_AWS_BINARY: 0
       KELSUS_CDK_VERSION: "1.0.1"
     steps:
       - checkout
+      # AWS binary
+      - restore_cache:
+          name: Getting AWS binary
+          key: v1-aws-
+      - run:
+          name: Bringing AWS binary
+          command: |
+            if [[ ! -f ~/.local/bin/aws  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
+              echo 'Downloading AWS binary'
+              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip
+              unzip awscliv2.zip
+              ./aws/install -u -i ~/aws-cli -b ~/.local/bin
+            else
+                echo 'AWS binary already in environment'
+            fi
+      - save_cache:
+          name: "Saving AWS binary"
+          paths:
+            - ~/aws-cli
+            - ~/.local/bin/aws
+          key: v1-aws-{{ checksum "~/.local/bin/aws" }}
+      # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: kelsus-cdk-
+          key: kelsus-cdk-v1.0.1
       - run:
           name: Bringing Kelsus CDK binary
           command: |
             if [[ ! -f ~/kelsus-cdk.sh ]]; then
               echo 'Downloading Kelsus CDK binary'
-              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk.sh kelsus-cdk.sh
+              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk kelsus-cdk
             else
                 echo 'Kelsus CDK binary already in environment'
             fi
       - save_cache:
           name: "Saving Kelsus CDK binary"
           paths:
-            - ~/kelsus-cdk.sh
-          key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
-      - run: chmod +x kelsus-cdk.sh
-      - run: ./kelsus-cdk.sh bump
+            - ~/kelsus-cdk
+          key: kelsus-cdk-v1.0.1
+      - run: chmod +x kelsus-cdk
+      # Save binaries
       - persist_to_workspace:
           root: .
           paths:
-            - kelsus-cdk.sh
+            - kelsus-cdk
             - package.json
+            - aws-cli
+            - .local/bin/aws
+  bump:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - run: ./kelsus-cdk bump
 
   deploy:
     docker:
-      - image: cimg/aws:2022.06.1
+      - image: cimg/base:stable
     resource_class: small
     steps:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh deploy deploy default
+      - run: ./kelsus-cdk deploy --action deploy
       - persist_to_workspace:
           root: .
           paths:
@@ -66,11 +97,11 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh tag
+      - run: ./kelsus-cdk tag
 
   check:
     docker:
-      - image: cimg/aws:2022.06.1
+      - image: cimg/base:stable
     resource_class: small
     steps:
       - checkout
@@ -86,38 +117,19 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh prepare
+      - run: ./kelsus-cdk prepare
 
   verify:
     docker:
-      - image: cimg/aws:2022.06.1
+      - image: cimg/base:stable
     resource_class: small
     environment:
       KELSUS_CDK_VERSION: "1.0.1"
     steps:
       - checkout
-      - restore_cache:
-          name: Getting Kelsus CDK binary
-          key: kelsus-cdk-
-      - run:
-          name: Bringing Kelsus CDK binary
-          command: |
-            if [[ ! -f ~/kelsus-cdk.sh ]]; then
-              echo 'Downloading Kelsus CDK binary'
-              aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk.sh kelsus-cdk.sh
-            else
-                echo 'Kelsus CDK binary already in environment'
-            fi
-      - save_cache:
-          name: "Saving Kelsus CDK binary"
-          paths:
-            - ~/kelsus-cdk.sh
-          key: kelsus-cdk-{{ .Environment.KELSUS_CDK_VERSION }}
-      - run: ./kelsus-cdk.sh verify
-      - persist_to_workspace:
-          root: .
-          paths:
-            - kelsus-cdk.sh
+      - attach_workspace:
+          at: .
+      - run: ./kelsus-cdk verify
 
   pointers:
     docker:
@@ -127,12 +139,12 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk.sh pointers ${cat DEPLOY_STATUS}
+      - run: ./kelsus-cdk pointers ${cat DEPLOY_STATUS}
 
 workflows:
   production:
     jobs:
-      - verify:
+      - setup:
           filters:
             tags:
               only:
@@ -140,6 +152,14 @@ workflows:
                 - /[R|r]ollback-?.*/
             branches:
               ignore: /.*/
+      - verify:
+          requires:
+            - setup
+          filters:
+            tags:
+              only:
+                - /[D|d]eploy/
+                - /[R|r]ollback-?.*/
       - deploy:
           requires:
             - verify
@@ -160,9 +180,21 @@ workflows:
   development:
     jobs:
       - build
-      - bump:
+      - setup:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - /[D|d]evelop-?.*/
+                - /[D|d]evelopment/
+                - /[S|s]taging/
+                - /[H|h]otfix(es)?/
+                - /[M|m]ain/
+                - /[M|m]aster/
+      - bump:
+          requires:
+            - setup
           filters:
             branches:
               only:
