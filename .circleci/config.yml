@@ -20,29 +20,32 @@ jobs:
       # AWS binary
       - restore_cache:
           name: Getting AWS binary
-          key: v2-aws-
+          key: v3-aws-
       - run:
-          name: Bringing/Installing AWS binary
+          name: Bringing AWS binary
           command: |
-            if [[ ! -f awscliv2.zip  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
+            if [[ ! -f ~/.local/bin/aws  ||  "$FORCE_UPDATE_AWS_BINARY" -eq 1 ]]; then
               echo 'Downloading AWS binary'
-              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip 
+              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output awscliv2.zip
+              unzip awscliv2.zip
+              ./aws/install -u -i ~/aws-cli -b ~/.local/bin
+            else
+                echo 'AWS binary already in environment'
             fi
-            unzip awscliv2.zip
-            ./aws/install -u -i aws-cli -b .local/bin
       - save_cache:
           name: "Saving AWS binary"
           paths:
-            - awscliv2.zip
-          key: v2-aws-{{ checksum "awscliv2.zip" }}
+            - ~/aws-cli
+            - ~/.local/bin/aws
+          key: v3-aws-{{ checksum "~/.local/bin/aws" }}
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: kelsus-cdk-v1.0.1
+          key: v1-kelsus-cdk-v1.0.1
       - run:
           name: Bringing Kelsus CDK binary
           command: |
-            if [[ ! -f kelsus-cdk ]]; then
+            if [[ ! -f ~/kelsus-cdk ]]; then
               echo 'Downloading Kelsus CDK binary'
               aws s3 cp s3://kelsus-cdk/$KELSUS_CDK_VERSION/kelsus-cdk kelsus-cdk
             else
@@ -51,15 +54,14 @@ jobs:
       - save_cache:
           name: "Saving Kelsus CDK binary"
           paths:
-            - kelsus-cdk
-          key: kelsus-cdk-v1.0.1
+            - ~/kelsus-cdk
+          key: v1-kelsus-cdk-v1.0.1
       - run: chmod +x kelsus-cdk
       # Save binaries
       - persist_to_workspace:
           root: .
           paths:
             - kelsus-cdk
-            - package.json
             - aws-cli
             - .local/bin/aws
   bump:
@@ -71,6 +73,10 @@ jobs:
       - attach_workspace:
           at: .
       - run: ./kelsus-cdk bump
+      - persist_to_workspace:
+          root: .
+          paths:
+            - package.json
 
   deploy:
     docker:
