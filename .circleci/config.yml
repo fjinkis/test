@@ -71,6 +71,8 @@ jobs:
     resource_class: small
     steps:
       - checkout
+      - attach_workspace:
+          at: .
       - run: ./kelsus-cdk bump
 
   deploy:
