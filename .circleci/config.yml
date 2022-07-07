@@ -63,8 +63,8 @@ jobs:
           paths:
             - kelsus-cdk
             - package.json
-            - ~/aws-cli
-            - ~/.local/bin/aws
+            - aws-cli
+            - .local/bin/aws
   bump:
     docker:
       - image: cimg/base:stable
@@ -183,6 +183,15 @@ workflows:
       - setup:
           requires:
             - build
+          filters:
+            branches:
+              only:
+                - /[D|d]evelop-?.*/
+                - /[D|d]evelopment/
+                - /[S|s]taging/
+                - /[H|h]otfix(es)?/
+                - /[M|m]ain/
+                - /[M|m]aster/
       - bump:
           requires:
             - setup
