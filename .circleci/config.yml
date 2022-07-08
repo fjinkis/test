@@ -61,7 +61,6 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - ../../tmp/caxa
             - kelsus-cdk
             - aws-cli
             - .local/bin/aws
