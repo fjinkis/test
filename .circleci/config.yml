@@ -71,7 +71,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk test
       - run: ./kelsus-cdk bump
       - persist_to_workspace:
           root: .
@@ -85,7 +84,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk test
       - run: ./kelsus-cdk deploy --action deploy
       - persist_to_workspace:
           root: .
