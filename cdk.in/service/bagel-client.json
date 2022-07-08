@@ -1,0 +1,30 @@
+{
+  "general": {
+    "organization": "kelsus",
+    "serviceName": "bagel-client",
+    "applicationName": "bagel"
+  },
+  "regions": {
+    "us-east-2": {
+      "general": {},
+      "service": {
+        "common": {
+          "container": {
+            "sumoSecret": "someSecret"
+          },
+          "listener": {
+            "action": {
+              "forward": {
+                "conditions": [["/"]],
+                "priority": 1
+              }
+            }
+          }
+        },
+        "development": {},
+        "staging": {},
+        "production": {}
+      }
+    }
+  }
+}
