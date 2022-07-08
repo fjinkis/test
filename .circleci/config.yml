@@ -14,7 +14,7 @@ jobs:
     resource_class: small
     environment:
       FORCE_UPDATE_AWS_BINARY: 0
-      KELSUS_CDK_VERSION: "1.0.1"
+      KELSUS_CDK_VERSION: "1.0.2"
     steps:
       # AWS binary
       - restore_cache:
@@ -40,7 +40,7 @@ jobs:
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: v4-kelsus-cdk-v1.0.1
+          key: v1-kelsus-cdk-v1.0.2
       - run:
           name: Bringing Kelsus CDK binary
           command: |
@@ -54,8 +54,9 @@ jobs:
           name: "Saving Kelsus CDK binary"
           paths:
             - ~/kelsus-cdk
-          key: v4-kelsus-cdk-v1.0.1
+          key: v1-kelsus-cdk-v1.0.2
       - run: chmod +x kelsus-cdk
+      - run: kelsus-cdk test
       # Save binaries
       - persist_to_workspace:
           root: .
@@ -72,6 +73,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      - run: kelsus-cdk test
       - run: ./kelsus-cdk bump
       - persist_to_workspace:
           root: .
@@ -85,6 +87,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      - run: kelsus-cdk test
       - run: ./kelsus-cdk deploy --action deploy
       - persist_to_workspace:
           root: .
@@ -123,8 +126,6 @@ jobs:
     docker:
       - image: cimg/python:3.10.5
     resource_class: small
-    environment:
-      KELSUS_CDK_VERSION: "1.0.1"
     steps:
       - checkout
       - attach_workspace:
