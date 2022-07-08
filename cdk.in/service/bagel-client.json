@@ -8,8 +8,7 @@
     "us-east-2": {
       "general": {},
       "service": {
-        "common": {},
-        "development": {
+        "common": {
           "container": {
             "sumoSecret": "someSecret"
           },
@@ -21,7 +20,10 @@
               }
             }
           }
-        }
+        },
+        "development": {},
+        "staging": {},
+        "production": {}
       }
     }
   }
