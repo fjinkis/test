@@ -14,7 +14,7 @@ jobs:
     resource_class: small
     environment:
       FORCE_UPDATE_AWS_BINARY: 0
-      KELSUS_CDK_VERSION: "1.0.3"
+      KELSUS_CDK_VERSION: "1.0.2"
     steps:
       # AWS binary
       - restore_cache:
@@ -40,7 +40,7 @@ jobs:
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: v1-kelsus-cdk-v1.0.3
+          key: v2-kelsus-cdk-v1.0.2
       - run:
           name: Bringing Kelsus CDK binary
           command: |
@@ -54,7 +54,7 @@ jobs:
           name: "Saving Kelsus CDK binary"
           paths:
             - ~/kelsus-cdk
-          key: v1-kelsus-cdk-v1.0.3
+          key: v2-kelsus-cdk-v1.0.2
       - run: chmod +x kelsus-cdk
       # Save binaries
       - persist_to_workspace:
