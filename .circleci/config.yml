@@ -206,7 +206,7 @@ workflows:
             - bump
       - tag:
           requires:
-            - build
+            - setup
             - deploy
           filters:
             branches:
