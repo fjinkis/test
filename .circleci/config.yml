@@ -40,7 +40,7 @@ jobs:
       # Kelsus CDK binary
       - restore_cache:
           name: Getting Kelsus CDK binary
-          key: v2-kelsus-cdk-v1.0.2
+          key: v4-kelsus-cdk-v1.0.2
       - run:
           name: Bringing Kelsus CDK binary
           command: |
@@ -54,7 +54,7 @@ jobs:
           name: "Saving Kelsus CDK binary"
           paths:
             - ~/kelsus-cdk
-          key: v2-kelsus-cdk-v1.0.2
+          key: v4-kelsus-cdk-v1.0.2
       - run: chmod +x kelsus-cdk
       # Save binaries
       - persist_to_workspace:
@@ -138,7 +138,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: ./kelsus-cdk pointers ${cat DEPLOY_STATUS}
+      - run: ./kelsus-cdk pointers $(cat DEPLOY_STATUS)
 
 workflows:
   production:
