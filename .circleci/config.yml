@@ -111,7 +111,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: echo "CDK DIFF"
+      - run: ./kelsus-cdk check
   prepare-main:
     docker:
       - image: cimg/python:3.10.5
