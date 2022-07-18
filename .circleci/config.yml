@@ -13,4 +13,4 @@ jobs:
       - aws-s3/copy:
           arguments: "--dryrun"
           from: README.md
-          to: 's3://kelsus-cdk/$(cat package.json | jq "(.version) --raw-output)-test/kelsus-cdk'
+          to: 's3://kelsus-cdk/$(cat package.json | jq "(.version)" --raw-output)-test/kelsus-cdk'
